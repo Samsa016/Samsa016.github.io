@@ -1,3 +1,5 @@
+Правила проекта — в `CLAUDE.md`. Техническое задание — в `TZ.md`. Читать до любого кода.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Андрей — разработчик продуктов и AI-агентов</title>
+<link rel="canonical" href="/ru/">
+<meta name="robots" content="noindex">
+<style>
+  html{background:#0a0c0f;color:#e8e4dc;color-scheme:dark}
+  body{margin:0;min-height:100dvh;display:grid;place-content:center;gap:1rem;
+       font:400 .8125rem/1.5 ui-monospace,monospace;letter-spacing:.24em;text-transform:uppercase}
+  a{color:inherit}
+</style>
+<script>
+  /* Язык выбирается по настройкам браузера. Ссылки ниже остаются рабочими,
+     если скрипты выключены — страница не должна становиться тупиком. */
+  (function () {
+    var lang = (navigator.languages && navigator.languages[0] || navigator.language || "ru");
+    location.replace(lang.toLowerCase().indexOf("ru") === 0 ? "/ru/" : "/en/");
+  })();
+</script>
+</head>
+<body>
+  <a href="/ru/">Русский</a>
+  <a href="/en/">English</a>
+</body>
+</html>

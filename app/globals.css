@@ -1,26 +1,153 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+  Дизайн-система.
+
+  Главное правило палитры: у сайта НЕТ своего акцентного цвета. База ахроматичная
+  и холодная. Любой цвет на странице приходит из `--case-tint` — доминанты
+  постер-кадра конкретной работы. Пока курсор не на кейсе, страница монохромна.
+*/
+
+@theme {
+  /* Палитра */
+  --color-ink: #0a0c0f;
+  --color-ink-raised: #12161b;
+  --color-ink-sunken: #06080a;
+  --color-bone: #e8e4dc;
+  --color-muted: #7c8288;
+  --color-rule: --alpha(var(--color-bone) / 10%);
+  --color-rule-strong: --alpha(var(--color-bone) / 22%);
+
+  /* Типографика */
+  --font-display: var(--font-unbounded), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-golos), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --text-chapter: clamp(2.125rem, 6.2vw, 5.75rem);
+  --text-chapter--line-height: 0.94;
+  --text-chapter--letter-spacing: -0.03em;
+
+  --text-case: clamp(1.5rem, 2.6vw, 2.75rem);
+  --text-case--line-height: 1.04;
+  --text-case--letter-spacing: -0.02em;
+
+  --text-lede: clamp(1.0625rem, 1.4vw, 1.375rem);
+  --text-lede--line-height: 1.55;
+
+  --text-credit: 0.8125rem;
+  --text-credit--line-height: 1.5;
+
+  --text-slate: 0.6875rem;
+  --text-slate--line-height: 1;
+  --text-slate--letter-spacing: 0.24em;
+
+  /* Ритм */
+  --spacing-chapter: clamp(6rem, 12vh, 12rem);
+  --spacing-gutter: clamp(1.25rem, 4vw, 4rem);
+  --container-frame: 90rem;
+
+  /* Движение */
+  --ease-reel: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --duration-develop: 450ms;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /*
+      Заглушка тинта: пока постер-кадр не посчитан, свечение остаётся
+      ахроматичным и кадр не выделяется цветом, которого у работы нет.
+    */
+    --case-tint: var(--color-muted);
+  }
+
+  html {
+    background-color: var(--color-ink);
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-bone);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /*
+    Русские составные слова («автоматизация», «производительность») на дисплейном
+    кегле шире колонки. Без переноса они выталкивают грид за вьюпорт.
+  */
+  h1, h2, h3 {
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  ::selection {
+    background-color: var(--color-bone);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-bone);
+    outline-offset: 3px;
+  }
+
+  /* Курсор в кадре не нужен, но фокус обязан быть виден всегда. */
+  [data-frame]:focus-visible {
+    outline-offset: 0;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/*
+  Слой components, а не utilities: иначе `.slate` перебивает тейлвиндовские
+  `normal-case` и `leading-*`, которыми его правят на месте.
+*/
+@layer components {
+  /* Метка-титр: капсом, широкий трекинг, моноширинный. */
+  .slate {
+    font-family: var(--font-mono);
+    font-size: var(--text-slate);
+    line-height: 1.5;
+    letter-spacing: var(--text-slate--letter-spacing);
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  /* Ссылка с подчёркиванием, растущим от левого края. */
+  .rule-link {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.15em;
+  }
+  .rule-link::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    bottom: 0;
+    height: 1px;
+    width: 100%;
+    background-color: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 320ms var(--ease-reel);
+  }
+  .rule-link:hover::after,
+  .rule-link:focus-visible::after {
+    transform: scaleX(1);
+  }
+}
+
+/*
+  Полный стоп для движения. Видео и пробег Set-of-Marks отключаются отдельно,
+  в самих компонентах — здесь снимается только CSS-анимация.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

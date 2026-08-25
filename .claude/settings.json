@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm build)",
+      "Bash(pnpm dev:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm demo:*)",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(npx playwright:*)",
+      "Bash(ffmpeg:*)",
+      "Bash(ffprobe:*)",
+      "Bash(node scripts/:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(du:*)",
+      "Bash(find:*)"
+    ]
+  }
+}

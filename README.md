@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Портфолио
 
-## Getting Started
+Сайт-портфолио: 27 работ, разложенных по четырём главам-годам, с видеодемками,
+которые играют при наведении. Два языка, статическая раздача.
 
-First, run the development server:
+- **ТЗ** — [`TZ.md`](TZ.md)
+- **Правила работы над проектом** — [`CLAUDE.md`](CLAUDE.md)
+- **Состояние съёмок и сценарии** — [`SHOOTING.md`](SHOOTING.md)
+
+## Запуск
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm dev            # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Сборка и проверка
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm build          # статический экспорт в out/
+pnpm serve:static   # раздать out/ на :3300 с gzip
+pnpm audit          # приёмка: скролл, видео, reduced-motion, тач, доступность
+pnpm privacy        # данные заказчиков не должны попасть в контент
+pnpm lint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`pnpm audit` требует поднятого сервера; адрес задаётся `BASE`
+(по умолчанию `http://localhost:3100`).
 
-## Learn More
+## Видео
 
-To learn more about Next.js, take a look at the following resources:
+Правила съёмки — в скилле `.claude/skills/video-demo`. Что уже снято и что
+осталось — в [`SHOOTING.md`](SHOOTING.md).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm demo:record            # все доступные кейсы
+pnpm demo:record monolit    # один
+pnpm demo:tint              # доминанты постеров для --case-tint
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Каждый ролик — 8–12 с, немой, webm (AV1) + mp4 (H.264 для Safari) + два размера
+постера. Бюджеты проверяет `scripts/encode.sh`.
 
-## Deploy on Vercel
+## Контент
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Весь текст — в `lib/content/ru.ts` и `lib/content/en.ts`, структура кейсов —
+в `lib/content/cases.ts`. В JSX ничего не хардкодится.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Список слагов живёт отдельно (`lib/content/slugs.ts`) и сверяется на компиляции:
+добавил кейс — TypeScript потребует текст на обоих языках.
+
+Контакты владельца — в `lib/owner.ts`, единственный файл, исключённый из
+проверки приватности.
+
+## Деплой
+
+GitHub Pages, сборка в Actions (`.github/workflows/deploy.yml`) при пуше в `main`.
+
+Адрес сайта пекётся в статику на сборке (canonical, hreflang, sitemap), поэтому
+задаётся переменной репозитория `SITE_URL`. При смене домена — поменять её
+и пересобрать.
+
+Сайт — статика без серверной части, поэтому переносится на любой хостинг:
+`out/` можно положить куда угодно.
