@@ -32,36 +32,39 @@ export const en: SiteCopy = {
     live: "See it live",
     repo: "Source",
     archive: "Also in this chapter",
+    allWork: "All work",
+    year: "Year",
     noFootage: "No footage yet",
     backHome: "All work",
     caseOf: (n, total) => `Case ${n} of ${total}`,
+  },
+
+  contents: {
+    title: "Filmography",
+    works: "works",
+    years: "years",
   },
 
   chapters: {
     y4: {
       index: "Year 4",
       title: "Agents and automation",
-      lede: "Systems that run with nobody at the controls: they look at the screen, decide, and finish the job.",
+      lede: "Systems that run with nobody at the controls: they look at the screen, decide, and finish the job. Half the year went to paid work — it sits below, with client names and data left out.",
     },
     y3: {
       index: "Year 3",
-      title: "AI integration",
-      lede: "The model inside the product, not bolted beside it. Vector search, structured extraction, answers tied to a source.",
+      title: "Products of my own",
+      lede: "Work taken to the point where people actually use it: its own domain, real money, real visitors.",
     },
     y2: {
       index: "Year 2",
-      title: "Fullstack",
-      lede: "Whole problems, from the database schema to the form on screen. Money, access control, one validation contract on both ends.",
+      title: "The whole task",
+      lede: "Whole problems, from the database schema to the form on screen, both ends by hand. This is also where a model first appears inside the product.",
     },
     y1: {
       index: "Year 1",
-      title: "Frontend",
-      lede: "The start: markup, motion, state. Plus two builds where the interface is the entire product.",
-    },
-    client: {
-      index: "Clients",
-      title: "Client work",
-      lede: "Commercial projects. Company names and customer data stay out — the problem, the integrations and the solution stay in.",
+      title: "First screens",
+      lede: "The start: markup, motion, state. These are raw — they are here because everything began with them, not because they are the work to be proud of.",
     },
   },
 
@@ -79,6 +82,10 @@ export const en: SiteCopy = {
         "Three databases from one codebase — dialect picked from DATABASE_URL",
         "Upsert on the unique listing URL, plus retry on network failures",
         "Natural-language queries become filters through function calling",
+      ],
+      figures: [
+        { value: "4", label: "services" },
+        { value: "3", label: "databases" },
       ],
     },
     "browser-agent": {
@@ -103,12 +110,16 @@ export const en: SiteCopy = {
       solution:
         "The browser demo and the phone call are the same agent — only the transport differs. The script, the tools, the CRM and the compliance layer know nothing about how the audio arrived. The same dialog object also serves text mode, so the tests exercise real call logic rather than a copy of it.",
       proof: [
-        "133 tests",
         "One agent across SIP and WebRTC — only the transport changes",
         "Function calling: free slots, booking with race protection, call outcome",
         "Outbound campaigns: queue, concurrency, retries, calling windows",
         "Do-not-call list and consent log built into the architecture, not deferred",
         "Runs with zero API keys — external services swapped for deterministic stubs",
+      ],
+      figures: [
+        { value: "133", label: "tests" },
+        { value: "2", label: "transports" },
+        { value: "0", label: "keys to run it" },
       ],
     },
     midnight: {
@@ -232,6 +243,11 @@ export const en: SiteCopy = {
         "Cache and rate limiting on Upstash Redis",
         "Architected for 1,000–10,000 users",
       ],
+      figures: [
+        { value: "3", label: "roles" },
+        { value: "120", label: "sellers in the demo" },
+        { value: "6,000+", label: "products in the demo" },
+      ],
     },
     perfectshop: {
       title: "PerfectShop",
@@ -271,9 +287,12 @@ export const en: SiteCopy = {
       solution:
         "The wow on the front page comes from video and scroll direction rather than programmatic effects — the site page ships about two kilobytes of JavaScript. Heavy three.js loads only on a separate lab page, where a WebGPU particle engine is the thing being shown.",
       proof: [
-        "The site page ships around 2 KB of JavaScript",
         "three.js is loaded only on the lab page",
         "A WebGPU particle engine as a technical case in its own right",
+      ],
+      figures: [
+        { value: "2", unit: "KB", label: "of own JS on the front page" },
+        { value: "850", unit: "KB", label: "three.js on the lab page" },
       ],
     },
     monolit: {
@@ -376,6 +395,32 @@ export const en: SiteCopy = {
         "Delivered as a process with stage prompts, not as an application",
         "Proven on a pilot study",
         "Reproducible on the next study",
+      ],
+    },
+    "client-service-mentor": {
+      title: "Service floor mentor",
+      oneLiner:
+        "A helper for technicians at the machine: ask out loud, get the instruction from the manufacturer's manual.",
+      task: "Technicians on the floor called senior engineers about every fault. The questions repeated, there was one engineer, and machine downtime costs money. The answer had to arrive at the machine itself: hands are busy, so asking happens by voice, and answering happens strictly from the manual.",
+      solution: "Retrieval runs before the model, not after. The manufacturer's documentation is crawled, translated and split into fragments; a question finds fragments first, and only then does the model phrase an answer from what it found. Two controller families — for sheet cutters and tube cutters — are separated at the retrieval level, so instructions from different machines never mix. Speech is transcribed on our own server; only text leaves it.",
+      proof: [
+        "Answers are assembled only from retrieved documentation fragments",
+        "Speech recognition stays local — faster-whisper on our own server",
+        "Two equipment families kept apart, so instructions never mix",
+        "Self-hosted: Docker Compose and Caddy with automatic certificates",
+      ],
+    },
+    "client-drop-bot": {
+      title: "Drop purchase bot",
+      oneLiner:
+        "Buying the moment stock goes live: everything rides on how fast the bot notices the opening.",
+      task: "Stock goes live at an appointed minute and the window closes in seconds. Polling one endpoint twice a second breaks exactly then: the server buckles under peak load, the request hangs — and while it hangs, the window opens and shuts. That is what happened: normal replies took 50–100 ms, and at the peak one request hung for 22 seconds.",
+      solution: "Two independent detection channels instead of one: polling the endpoint and reading data off the front page. If one hangs, the other catches the opening, and the stuck request never blocks the parallel one. One connection per worker for its whole lifetime, HTTP/2 and fully async I/O, so nothing re-establishes a connection at the most expensive moment.",
+      proof: [
+        "Failure traced by timings: a 22 s hang against the normal 50–100 ms",
+        "Two independent detection channels — one failing does not blind the bot",
+        "One connection per worker, HTTP/2, fully asynchronous I/O",
+        "Polling interval cut from 0.5 s to 0.1 s",
       ],
     },
   },

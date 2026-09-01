@@ -1,12 +1,17 @@
 import Link from "next/link";
 import type { CaseMeta, Lang, SiteCopy } from "@/lib/content";
+import { Counters } from "./Counters";
 import { Credits } from "./Credits";
 import { Frame } from "./Frame";
 import { Reveal } from "./Reveal";
+import { caseVars } from "@/lib/tint";
 
 type Common = { lang: Lang; copy: SiteCopy };
 
 const caseHref = (lang: Lang, slug: string) => `/${lang}/case/${slug}`;
+
+const field = caseVars;
+
 
 /**
  * Крупный кейс: кадр во всю ширину, титры заезжают на него снизу-слева.
@@ -28,15 +33,26 @@ export function FeatureCase({
   */
   if (!meta.media) {
     return (
-      <Reveal className="mb-24 border-t border-rule pt-10 md:mb-40 md:pt-14">
+      <Reveal
+        className="case-field mb-24 border-t border-rule pt-10 md:mb-40 md:pt-14"
+        style={field(meta.tint)}
+      >
         <div className="grid gap-x-gutter gap-y-8 md:grid-cols-12">
           <div className="md:col-span-6">
-            <h3 className="min-w-0 font-display text-chapter text-balance">
+            <h3 className="min-w-0 font-display text-feature text-balance">
               <Link href={href} className="rule-link">
                 {caseCopy.title}
               </Link>
             </h3>
             <p className="mt-6 max-w-[42ch] text-lede text-bone/75">{caseCopy.oneLiner}</p>
+
+            {caseCopy.figures && (
+              <Counters
+                figures={caseCopy.figures}
+                orientation="column"
+                className="mt-10 md:mt-14"
+              />
+            )}
           </div>
 
           <div className="flex flex-col gap-6 md:col-span-5 md:col-start-8">
@@ -60,11 +76,12 @@ export function FeatureCase({
   }
 
   return (
-    <Reveal className="mb-24 md:mb-40">
+    <Reveal className="case-field mb-24 md:mb-40" style={field(meta.tint)}>
       <Frame
         href={href}
         title={caseCopy.title}
         media={meta.media}
+        tint={meta.tint}
         priority={priority}
         sizes="(max-width: 768px) 100vw, 76vw"
         placeholder={copy.labels.noFootage}
@@ -73,102 +90,15 @@ export function FeatureCase({
         <div className="relative z-10 -mt-6 bg-ink pt-8 pr-6 md:col-span-7 md:-mt-16 md:pt-10 md:pr-12">
           <Credits meta={meta} copy={caseCopy} labels={copy.labels} href={href} />
         </div>
+
+        {caseCopy.figures && (
+          <Counters
+            figures={caseCopy.figures}
+            orientation="column"
+            className="mt-12 md:col-span-4 md:col-start-9 md:mt-16"
+          />
+        )}
       </div>
-    </Reveal>
-  );
-}
-
-/**
- * Средние кейсы — парами, вторая колонка со сбивкой вниз.
- * Ровная пара читается как карточки; сбивка — как разворот.
- */
-export function MediumPair({
-  cases,
-  lang,
-  copy,
-}: Common & { cases: readonly CaseMeta[] }) {
-  return (
-    <div className="mb-24 grid gap-x-gutter gap-y-24 md:mb-40 md:grid-cols-2">
-      {cases.map((meta, index) => {
-        const href = caseHref(lang, meta.slug);
-        const caseCopy = copy.cases[meta.slug];
-
-        return (
-          <Reveal
-            key={meta.slug}
-            delay={index % 2 === 1 ? 0.08 : 0}
-            className={index % 2 === 1 ? "md:mt-32" : undefined}
-          >
-            {meta.media ? (
-              <Frame
-                href={href}
-                title={caseCopy.title}
-                media={meta.media}
-                sizes="(max-width: 768px) 100vw, 38vw"
-                placeholder={copy.labels.noFootage}
-              />
-            ) : (
-              <div className="border-t border-rule" />
-            )}
-            <div className="mt-8">
-              <Credits
-                meta={meta}
-                copy={caseCopy}
-                labels={copy.labels}
-                href={href}
-                proofLimit={2}
-              />
-            </div>
-          </Reveal>
-        );
-      })}
-    </div>
-  );
-}
-
-/** Архив: строка на кейс. Без видео — этим работам нечего показывать в движении. */
-export function ArchiveList({
-  cases,
-  copy,
-}: Omit<Common, "lang"> & { cases: readonly CaseMeta[] }) {
-  if (cases.length === 0) return null;
-
-  return (
-    <Reveal>
-      <p className="slate mb-6">{copy.labels.archive}</p>
-      <ul className="border-t border-rule">
-        {cases.map((meta) => {
-          const caseCopy = copy.cases[meta.slug];
-          const external = meta.links.repo ?? meta.links.live;
-
-          return (
-            <li key={meta.slug} className="border-b border-rule">
-              <div className="grid items-baseline gap-x-gutter gap-y-2 py-6 md:grid-cols-12">
-                <h3 className="min-w-0 font-display text-lg md:col-span-3">
-                  {external ? (
-                    <a
-                      href={external}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rule-link"
-                    >
-                      {caseCopy.title}
-                    </a>
-                  ) : (
-                    caseCopy.title
-                  )}
-                </h3>
-                <p className="min-w-0 max-w-[52ch] text-credit text-bone/70 md:col-span-5">
-                  {caseCopy.oneLiner}
-                </p>
-                <p className="min-w-0 slate normal-case tracking-[0.12em] md:col-span-4 md:text-right">
-                  {meta.stack.join(" · ")}
-                </p>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
     </Reveal>
   );
 }
@@ -186,7 +116,10 @@ export function ClientCase({
   const href = caseHref(lang, meta.slug);
 
   return (
-    <Reveal className="border-t border-rule py-12 first:border-t-0 md:py-16">
+    <Reveal
+      className="case-field border-t border-rule py-12 first:border-t-0 md:py-16"
+      style={field(meta.tint)}
+    >
       <div className="grid gap-x-gutter gap-y-8 md:grid-cols-12">
         <div className="md:col-span-5">
           <h3 className="min-w-0 font-display text-case text-balance">

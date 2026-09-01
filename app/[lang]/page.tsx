@@ -1,23 +1,27 @@
 import { notFound } from "next/navigation";
 import {
   CHAPTERS_IN_ORDER,
+  CHAPTER_YEAR,
   casesOfChapter,
+  caseIndex,
   caseTotal,
   getCopy,
+  heroCase,
+  type CaseMeta,
   type ChapterId,
+  type Lang,
+  type SiteCopy,
 } from "@/lib/content";
 import { isLang } from "@/lib/lang";
 import { Chapter } from "@/components/Chapter";
-import {
-  ArchiveList,
-  ClientCase,
-  FeatureCase,
-  MediumPair,
-} from "@/components/CaseBlocks";
+import { ClientCase, FeatureCase } from "@/components/CaseBlocks";
 import { ChapterRail } from "@/components/ChapterRail";
 import { Contact } from "@/components/Contact";
+import { Contents } from "@/components/Contents";
+import { Hero } from "@/components/Hero";
 import { SetOfMarks } from "@/components/SetOfMarks";
 import { SiteHeader } from "@/components/SiteHeader";
+import { WorkIndex, type WorkRow } from "@/components/WorkIndex";
 
 export default async function HomePage({
   params,
@@ -29,6 +33,7 @@ export default async function HomePage({
 
   const copy = getCopy(lang);
   const rail = CHAPTERS_IN_ORDER.map((id) => ({ id, copy: copy.chapters[id] }));
+  const hero = heroCase();
 
   return (
     <>
@@ -40,7 +45,7 @@ export default async function HomePage({
 
       <main>
         {/* Ракорд */}
-        <section className="mx-auto w-full max-w-frame px-gutter pt-16 pb-chapter md:pt-28">
+        <section className="mx-auto w-full max-w-frame px-gutter pt-16 pb-16 md:pt-28 md:pb-24">
           <div className="grid gap-x-gutter gap-y-8 md:grid-cols-12">
             <p className="slate md:col-span-3 md:pt-5">{copy.hero.role}</p>
 
@@ -59,12 +64,31 @@ export default async function HomePage({
           </div>
         </section>
 
+        {/*
+          Кадр героя. Есть только если хоть одна работа снята: пустой бокс 16:9
+          хуже отсутствия кадра, и тогда первый экран остаётся текстовым.
+        */}
+        {hero && (
+          <div className="mx-auto w-full max-w-frame px-gutter">
+            <Hero meta={hero} lang={lang} copy={copy} />
+          </div>
+        )}
+
+        {/* Светлая полоса на всю ширину — перелом страницы, см. DESIGN.md §4. */}
+        <Contents chapters={rail} copy={copy} />
+
         <div className="mx-auto flex w-full max-w-frame gap-gutter px-gutter">
           <ChapterRail chapters={rail} />
 
           <div className="min-w-0 flex-1">
             {CHAPTERS_IN_ORDER.map((id) => (
-              <ChapterSection key={id} id={id} lang={lang} copy={copy} />
+              <ChapterSection
+                key={id}
+                id={id}
+                lang={lang}
+                copy={copy}
+                heroSlug={hero?.slug}
+              />
             ))}
           </div>
         </div>
@@ -81,39 +105,82 @@ function ChapterSection({
   id,
   lang,
   copy,
+  heroSlug,
 }: {
   id: ChapterId;
   lang: "ru" | "en";
   copy: ReturnType<typeof getCopy>;
+  heroSlug?: string;
 }) {
   const cases = casesOfChapter(id);
   if (cases.length === 0) return null;
 
-  const features = cases.filter((c) => c.weight === "feature");
-  const mediums = cases.filter((c) => c.weight === "medium");
-  const archive = cases.filter((c) => c.weight === "archive");
+  /*
+    Работа, ушедшая в кадр героя, остаётся в своей главе — хронология важнее, —
+    но строкой списка, а не вторым крупным кадром. Один и тот же кадр дважды
+    на странице читается как ошибка вёрстки.
+  */
+  const features = cases.filter((c) => c.weight === "feature" && c.slug !== heroSlug);
   const clients = cases.filter((c) => c.weight === "client");
+  const listed = cases.filter(
+    (c) =>
+      c.weight === "medium" ||
+      c.weight === "archive" ||
+      (c.weight === "feature" && c.slug === heroSlug),
+  );
 
   return (
     <Chapter id={id} copy={copy.chapters[id]}>
-      {features.map((meta, index) => (
-        <FeatureCase
-          key={meta.slug}
-          meta={meta}
-          lang={lang}
-          copy={copy}
-          /* Единственный постер, который грузится сразу, — первый кадр первой главы. */
-          priority={id === "y4" && index === 0}
-        />
+      {features.map((meta) => (
+        <FeatureCase key={meta.slug} meta={meta} lang={lang} copy={copy} />
       ))}
 
-      {mediums.length > 0 && <MediumPair cases={mediums} lang={lang} copy={copy} />}
+      <WorkIndex
+        rows={toRows(listed, lang, copy)}
+        heading={copy.labels.allWork}
+        noFootage={copy.labels.noFootage}
+      />
 
       {clients.map((meta) => (
         <ClientCase key={meta.slug} meta={meta} lang={lang} copy={copy} />
       ))}
-
-      <ArchiveList cases={archive} copy={copy} />
     </Chapter>
   );
+}
+
+/**
+ * Данные работы → строка списка.
+ *
+ * Собирается здесь, на сервере: `WorkIndex` клиентский, а в `SiteCopy` лежат
+ * функции (`labels.caseOf`), которые через границу сервер → клиент не проходят.
+ * Заодно на клиент уезжают только показанные строки, а не весь контент сайта.
+ */
+function toRows(
+  cases: readonly CaseMeta[],
+  lang: Lang,
+  copy: SiteCopy,
+): readonly WorkRow[] {
+  return cases.map((meta) => {
+    const index = caseIndex(meta.slug);
+
+    return {
+      slug: meta.slug,
+      href: `/${lang}/case/${meta.slug}`,
+      title: copy.cases[meta.slug].title,
+      number: String(index).padStart(2, "0"),
+      meta: [
+        copy.chapters[meta.chapter].index,
+        CHAPTER_YEAR[meta.chapter],
+        ...meta.stack.slice(0, 2),
+      ].join(" · "),
+      tint: meta.tint,
+      poster: meta.media
+        ? {
+            src: meta.media.poster,
+            srcSet: `${meta.media.poster.replace(/\.jpg$/, "@640.jpg")} 640w, ${meta.media.poster} 1280w`,
+          }
+        : undefined,
+      caption: copy.labels.caseOf(index, caseTotal),
+    };
+  });
 }

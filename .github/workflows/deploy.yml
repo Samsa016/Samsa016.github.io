@@ -38,7 +38,11 @@ jobs:
           NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || 'https://samsa016.github.io' }}
 
       # Данные заказчиков не должны уехать в публичный репозиторий вместе с сайтом.
+      # Сам денилист хранится секретом: в открытом виде он расшифровывал бы
+      # обезличенные кейсы. Без секрета шаг падает — это нужное поведение.
       - run: pnpm privacy
+        env:
+          PRIVACY_CLIENTS: ${{ secrets.PRIVACY_CLIENTS }}
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

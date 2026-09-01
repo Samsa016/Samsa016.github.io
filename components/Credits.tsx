@@ -10,16 +10,29 @@ type Props = {
   proofLimit?: number;
   /** Заголовок уже стоит выше по разметке — не дублируем его. */
   headless?: boolean;
+  /**
+   * Титры под кадром: заголовок и однострочник встают по центру кадра.
+   * Ниже центровка не идёт — факты и стек читаются только с ровного левого края.
+   */
+  centered?: boolean;
 };
 
 /** Титры кейса: то, что стоит рядом с кадром. */
-export function Credits({ meta, copy, labels, href, proofLimit = 3, headless }: Props) {
+export function Credits({
+  meta,
+  copy,
+  labels,
+  href,
+  proofLimit = 3,
+  headless,
+  centered,
+}: Props) {
   const proof = copy.proof.slice(0, proofLimit);
 
   return (
     <div className="flex flex-col gap-5">
       {!headless && (
-        <div className="flex flex-col gap-3">
+        <div className={`flex flex-col gap-3 ${centered ? "items-center text-center" : ""}`}>
           <h3 className="min-w-0 font-display text-case text-balance">
             <Link href={href} className="rule-link">
               {copy.title}

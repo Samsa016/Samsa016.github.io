@@ -40,3 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .demo-raw/
+
+# Денилист заказчиков: в публичном репозитории ему не место.
+.privacy-clients

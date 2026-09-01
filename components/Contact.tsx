@@ -13,14 +13,19 @@ export function Contact({ copy }: { copy: SiteCopy }) {
 
             <ul className="flex flex-col">
               {copy.contact.channels.map((channel) => (
+                /*
+                  Почта длиннее, чем колонка на планшете. Перенос вместо сжатия:
+                  адрес уходит на свою строку и остаётся прижатым к правому краю,
+                  так строка контактов не ломается и адрес читается целиком.
+                */
                 <li
                   key={channel.label}
-                  className="flex items-baseline justify-between gap-6 border-b border-rule py-4"
+                  className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-rule py-4"
                 >
                   <span className="slate">{channel.label}</span>
                   <a
                     href={channel.href}
-                    className="rule-link font-mono text-credit text-bone"
+                    className="rule-link ml-auto font-mono text-credit text-bone"
                   >
                     {channel.value}
                   </a>

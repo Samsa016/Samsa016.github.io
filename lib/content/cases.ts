@@ -15,6 +15,8 @@ export const CASES: readonly CaseMeta[] = [
     slug: "autoscraper",
     chapter: "y4",
     weight: "feature",
+    // японский авторынок: ржавчина и терракота кузовов
+    tint: "hsl(18 46% 57%)",
     stack: ["FastAPI", "Playwright", "PostgreSQL / MySQL / SQLite", "Next.js", "Aiogram", "OpenAI"],
     links: { repo: `${GH}/AutoScraper__bot` },
   },
@@ -22,6 +24,8 @@ export const CASES: readonly CaseMeta[] = [
     slug: "browser-agent",
     chapter: "y4",
     weight: "feature",
+    // агент смотрит на экран — холодный свет монитора
+    tint: "hsl(199 46% 58%)",
     stack: ["Python", "Playwright", "GPT-4o Vision", "OpenRouter"],
     links: { repo: `${GH}/ai-browser-agent-v2` },
   },
@@ -29,6 +33,8 @@ export const CASES: readonly CaseMeta[] = [
     slug: "voicedesk",
     chapter: "y4",
     weight: "medium",
+    // индикатор занятой телефонной линии
+    tint: "hsl(348 40% 60%)",
     stack: ["FastAPI", "Pipecat", "WebRTC / SIP", "PostgreSQL", "Bitrix24", "Next.js"],
     links: {},
   },
@@ -36,6 +42,8 @@ export const CASES: readonly CaseMeta[] = [
     slug: "midnight",
     chapter: "y4",
     weight: "medium",
+    // ночная смена, когда очередь разбирает задачи без людей
+    tint: "hsl(230 40% 58%)",
     stack: ["Python", "LLM-скоринг", "очередь с ретраями", "Telegram"],
     links: {},
   },
@@ -46,10 +54,10 @@ export const CASES: readonly CaseMeta[] = [
       webm: "/video/sixmo.webm",
       mp4: "/video/sixmo.mp4",
       duration: 7.5,
-      tint: "hsl(150 42% 58%)",
     },
-    chapter: "y4",
+    chapter: "y2",
     weight: "medium",
+    tint: "hsl(150 42% 58%)",
     stack: ["TypeScript", "Playwright", "Zod"],
     links: { repo: `${GH}/Sixmo-Form-Automator` },
   },
@@ -60,10 +68,10 @@ export const CASES: readonly CaseMeta[] = [
       webm: "/video/tradesandbox.webm",
       mp4: "/video/tradesandbox.mp4",
       duration: 8.6,
-      tint: "hsl(157 65% 58%)",
     },
-    chapter: "y4",
+    chapter: "y2",
     weight: "medium",
+    tint: "hsl(157 65% 58%)",
     stack: ["TypeScript", "Canvas", "нодовый редактор", "без бэкенда"],
     links: { repo: `${GH}/Algo-Crafter` },
   },
@@ -71,15 +79,19 @@ export const CASES: readonly CaseMeta[] = [
   // ── Год 3 — AI-интеграции ───────────────────────────────────────────────
   {
     slug: "smartembed",
-    chapter: "y3",
+    chapter: "y2",
     weight: "feature",
+    // векторный поиск: холодная бирюза индекса
+    tint: "hsl(184 40% 55%)",
     stack: ["Python", "FastAPI", "ChromaDB", "React 19", "RAG"],
     links: { repo: `${GH}/ai-widget-saas` },
   },
   {
     slug: "mindtrack",
-    chapter: "y3",
+    chapter: "y2",
     weight: "medium",
+    // трекер состояния: тёплый розовый графика настроения
+    tint: "hsl(330 34% 60%)",
     stack: ["Next.js 15", "Tailwind v4", "OpenAI / OpenRouter", "JWT"],
     links: { repo: `${GH}/MindTrack-app-MOBILE-` },
   },
@@ -87,13 +99,17 @@ export const CASES: readonly CaseMeta[] = [
     slug: "lapka",
     chapter: "y3",
     weight: "medium",
+    // голосовой бот о живом — приглушённая зелень
+    tint: "hsl(96 30% 55%)",
     stack: ["aiogram 3", "Whisper", "GPT-4o mini", "SQLAlchemy 2.0 async", "APScheduler"],
     links: {},
   },
   {
     slug: "choice-app-meal",
-    chapter: "y3",
+    chapter: "y1",
     weight: "archive",
+    // выбор еды — тёплый красный
+    tint: "hsl(8 42% 58%)",
     stack: ["Next.js 14", "TypeScript", "Zustand", "OpenRouter", "Docker"],
     links: { repo: `${GH}/Choice-App-Meal` },
   },
@@ -101,13 +117,17 @@ export const CASES: readonly CaseMeta[] = [
     slug: "voice-agent-bot",
     chapter: "y3",
     weight: "archive",
+    // синтез речи: пурпур волновой формы
+    tint: "hsl(320 32% 58%)",
     stack: ["n8n", "MySQL", "Telegram Bot API", "ElevenLabs"],
     links: {},
   },
   {
     slug: "defect-probe",
-    chapter: "y3",
+    chapter: "y1",
     weight: "archive",
+    // разметка дефекта — красный контур находки
+    tint: "hsl(354 38% 58%)",
     stack: ["Python", "Gemini Vision"],
     links: {},
   },
@@ -115,8 +135,10 @@ export const CASES: readonly CaseMeta[] = [
   // ── Год 2 — fullstack ───────────────────────────────────────────────────
   {
     slug: "agora",
-    chapter: "y2",
+    chapter: "y3",
     weight: "feature",
+    // торговая площадь: латунь и золото
+    tint: "hsl(46 42% 56%)",
     stack: ["Next.js 16", "Prisma 7", "PostgreSQL", "Stripe", "NextAuth", "Upstash Redis"],
     links: { live: "https://agora.24rbs.ru" },
   },
@@ -124,6 +146,8 @@ export const CASES: readonly CaseMeta[] = [
     slug: "perfectshop",
     chapter: "y2",
     weight: "archive",
+    // витрина магазина
+    tint: "hsl(340 36% 58%)",
     stack: ["React 19", "TypeScript", "FastAPI", "SQLite", "YooKassa", "JWT"],
     links: { repo: `${GH}/marketplace` },
   },
@@ -134,17 +158,19 @@ export const CASES: readonly CaseMeta[] = [
       webm: "/video/work-journal.webm",
       mp4: "/video/work-journal.mp4",
       duration: 10.0,
-      tint: "hsl(212 42% 58%)",
     },
     chapter: "y2",
     weight: "medium",
+    tint: "hsl(212 42% 58%)",
     stack: ["React 19", "Zustand", "Zod", "FastAPI", "SQLAlchemy async", "Pydantic v2"],
     links: { repo: `${GH}/work-journal` },
   },
   {
     slug: "meteo-app",
-    chapter: "y2",
+    chapter: "y1",
     weight: "archive",
+    // глобус и атмосфера
+    tint: "hsl(196 44% 58%)",
     stack: ["React", "Vite", "TypeScript", "Mantine", "Cesium"],
     links: {},
   },
@@ -152,6 +178,8 @@ export const CASES: readonly CaseMeta[] = [
     slug: "resale-miniapp",
     chapter: "y2",
     weight: "archive",
+    // перепродажа внутри Telegram — спокойная зелень
+    tint: "hsl(120 28% 54%)",
     stack: ["Telegram Mini App", "FastAPI", "верификация init_data"],
     links: {},
   },
@@ -164,10 +192,10 @@ export const CASES: readonly CaseMeta[] = [
       webm: "/video/yav.webm",
       mp4: "/video/yav.mp4",
       duration: 11.0,
-      tint: "hsl(37 42% 58%)",
     },
-    chapter: "y1",
+    chapter: "y3",
     weight: "feature",
+    tint: "hsl(37 42% 58%)",
     stack: ["Vite", "Lenis", "three.js", "WebGPU"],
     links: {},
   },
@@ -180,8 +208,10 @@ export const CASES: readonly CaseMeta[] = [
       duration: 8.6,
       // Постер почти монохромный: доминанты нет, свечение остаётся нейтральным.
     },
-    chapter: "y1",
+    chapter: "y3",
     weight: "medium",
+    // кадр монохромный: цвет остаётся почти нейтральным
+    tint: "hsl(210 18% 58%)",
     stack: ["Next.js", "TypeScript", "Tailwind", "Framer Motion"],
     links: {},
   },
@@ -192,17 +222,19 @@ export const CASES: readonly CaseMeta[] = [
       webm: "/video/only-digital-test.webm",
       mp4: "/video/only-digital-test.mp4",
       duration: 10.0,
-      tint: "hsl(237 42% 58%)",
     },
     chapter: "y1",
     weight: "medium",
+    tint: "hsl(237 42% 58%)",
     stack: ["React", "TypeScript", "SCSS", "GSAP", "Swiper.js", "Webpack"],
     links: { repo: `${GH}/only-digital-test` },
   },
   {
     slug: "ticket-jira",
-    chapter: "y1",
+    chapter: "y2",
     weight: "archive",
+    // доска задач
+    tint: "hsl(188 36% 56%)",
     stack: ["Next.js 16", "React 19", "Prisma", "SQLite", "Server Actions"],
     links: { repo: `${GH}/ticket-jira` },
   },
@@ -210,6 +242,8 @@ export const CASES: readonly CaseMeta[] = [
     slug: "airesto",
     chapter: "y1",
     weight: "archive",
+    // Vue-зелень исходного интерфейса
+    tint: "hsl(74 34% 54%)",
     stack: ["Vue 3", "Composition API", "TypeScript", "Vite"],
     links: { repo: `${GH}/PlanTZ` },
   },
@@ -217,37 +251,73 @@ export const CASES: readonly CaseMeta[] = [
   // ── Работа с клиентами (обезличенно) ────────────────────────────────────
   {
     slug: "client-iiko-bi",
-    chapter: "client",
+    chapter: "y4",
     weight: "client",
+    // ночная выгрузка в BI
+    tint: "hsl(206 30% 56%)",
     stack: ["Python", "SQL Server", "ночной ETL", "BI-витрины"],
     links: {},
   },
   {
     slug: "client-crm-copilot",
-    chapter: "client",
+    chapter: "y4",
     weight: "client",
+    // подсказка внутри CRM
+    tint: "hsl(172 30% 54%)",
     stack: ["Python", "CRM Открытые линии", "LLM", "прайс как источник"],
     links: {},
   },
   {
     slug: "client-clinic-rag",
-    chapter: "client",
+    chapter: "y4",
     weight: "client",
+    // медцентр
+    tint: "hsl(160 26% 55%)",
     stack: ["Python", "aiogram", "RAG", "провайдер-агностичный LLM-слой"],
     links: {},
   },
   {
     slug: "client-deals-bot",
-    chapter: "client",
+    chapter: "y4",
     weight: "client",
+    // воронка сделок
+    tint: "hsl(38 30% 56%)",
     stack: ["Python", "CRM REST", "Telegram"],
     links: {},
   },
   {
     slug: "client-custdev",
-    chapter: "client",
+    chapter: "y4",
     weight: "client",
+    // исследование клиентов
+    tint: "hsl(340 26% 58%)",
     stack: ["стек ИИ-сервисов", "промпты по этапам", "процесс анализа интервью"],
+    links: {},
+  },
+  {
+    slug: "client-service-mentor",
+    chapter: "y4",
+    weight: "client",
+    // цех и металл: тёплая охра станочного света
+    tint: "hsl(28 30% 55%)",
+    stack: [
+      "FastAPI",
+      "Next.js",
+      "OpenRouter",
+      "fastembed",
+      "faster-whisper",
+      "Docker Compose",
+      "Caddy",
+    ],
+    links: {},
+  },
+  {
+    slug: "client-drop-bot",
+    chapter: "y4",
+    weight: "client",
+    // зелёный сигнал старта: всё в этой работе про момент открытия
+    tint: "hsl(88 30% 54%)",
+    stack: ["Python", "asyncio", "httpx", "HTTP/2"],
     links: {},
   },
 ];

@@ -10,6 +10,7 @@ import {
   getCopy,
 } from "@/lib/content";
 import { isLang } from "@/lib/lang";
+import { Counters } from "@/components/Counters";
 import { Frame } from "@/components/Frame";
 import { SiteHeader } from "@/components/SiteHeader";
 
@@ -74,10 +75,16 @@ export default async function CasePage({
         */}
         {meta.media && (
           <div className="mt-16 md:mt-24">
+            {/*
+              Кадр ведёт только в живой проект. Репозиторий — не замена продукту:
+              клиент, ткнувший в видео, хочет потрогать работу, а не читать код.
+              Живого стенда нет — кадр не кликается, исходники ждут в подвале.
+            */}
             <Frame
-              href={meta.links.live ?? meta.links.repo ?? `/${lang}/case/${meta.slug}`}
+              href={meta.links.live}
               title={caseCopy.title}
               media={meta.media}
+              tint={meta.tint}
               priority
               placeholder={copy.labels.noFootage}
             />
@@ -101,6 +108,17 @@ export default async function CasePage({
             </section>
           )}
         </div>
+
+        {/*
+          Числа стоят между разбором и фактами и идут во всю ширину: разбор —
+          это два массива текста подряд, и перелом нужен ровно здесь
+          (`DESIGN.md` §5). Кейсу без проверяемых чисел секция не рисуется.
+        */}
+        {caseCopy.figures && (
+          <section className="mt-16 md:mt-24">
+            <Counters figures={caseCopy.figures} />
+          </section>
+        )}
 
         <section className="mt-16 grid gap-x-gutter gap-y-8 md:mt-24 md:grid-cols-12">
           <h2 className="slate md:col-span-3 md:pt-1">{copy.labels.proof}</h2>

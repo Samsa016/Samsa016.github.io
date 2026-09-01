@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Media } from "@/lib/content";
 import { playExclusively, release } from "@/lib/video-conductor";
 import { timecode } from "@/lib/timecode";
+import { caseVars } from "@/lib/tint";
 
 /*
   AV1 в webm. Явные коды нужны, чтобы canPlayType дал честный ответ:
@@ -13,10 +14,58 @@ import { timecode } from "@/lib/timecode";
 */
 const WEBM = 'video/webm; codecs="av01.0.05M.08"';
 
+/*
+  Тач-устройства: автозапуск ждёт первого скролла.
+
+  Без отсрочки кадр героя стартует прямо на загрузке — и забирает себе LCP.
+  Браузер считает первый кадр видео главной отрисовкой экрана и приписывает
+  ей всё время скачивания ролика: замер 31.08.2026 дал LCP 3.7 с и Lighthouse
+  Performance 89 при пороге 90, хотя постер отрисовывался за 80 мс. Формально
+  видео даже «крупнее» постера — на 27 пикселей округления, — поэтому и
+  вытесняет его из кандидатов.
+
+  Скролл и есть тот момент, когда посетитель начал смотреть: до него он видит
+  постер, после — всё работает как раньше. Кадрам ниже первого экрана правило
+  не меняет ничего: до них и так не добраться, не прокрутив страницу.
+*/
+let touchReady = false;
+const pendingOnScroll = new Set<() => void>();
+
+function releasePending() {
+  touchReady = true;
+  for (const cb of pendingOnScroll) cb();
+  pendingOnScroll.clear();
+}
+
+function whenTouchReady(run: () => void) {
+  /*
+    Проверка `scrollY` обязательна, а не подстраховка. Кадр героя на телефоне
+    виден меньше чем на 60%, поэтому наблюдатель по нему не срабатывает до
+    прокрутки — и слушателя скролла на момент самой прокрутки ещё не
+    существует. Без этой ветки первый кадр ждал бы второго скролла.
+  */
+  if (touchReady || window.scrollY > 0) {
+    releasePending();
+    run();
+    return;
+  }
+
+  pendingOnScroll.add(run);
+  if (pendingOnScroll.size === 1)
+    window.addEventListener("scroll", releasePending, { once: true, passive: true });
+}
+
 type Props = {
-  href: string;
+  /*
+    Куда ведёт кадр. На главной — в разбор кейса; на самом разборе — в живой
+    проект, если он поднят. Ссылки нет — кадр остаётся кадром и не кликается:
+    увести человека в репозиторий значит подсунуть код вместо продукта.
+  */
+  href?: string;
   title: string;
   media?: Media;
+  /** Цвет работы: держит свечение кадра. */
+  tint: string;
   /** Крупные кадры грузят постер сразу, остальные — лениво. */
   priority?: boolean;
   /** Ширина кадра в раскладке — нужна, чтобы srcset не тянул лишние пиксели. */
@@ -25,9 +74,9 @@ type Props = {
   className?: string;
 };
 
-export function Frame({ href, title, media, priority, sizes, placeholder, className }: Props) {
+export function Frame({ href, title, media, tint, priority, sizes, placeholder, className }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const rootRef = useRef<HTMLAnchorElement | null>(null);
+  const rootRef = useRef<HTMLElement | null>(null);
 
   /** Кадр в зоне видимости — до этого не грузим ничего, даже по наведению. */
   const inView = useRef(false);
@@ -92,8 +141,9 @@ export function Frame({ href, title, media, priority, sizes, placeholder, classN
           stop();
           return;
         }
-        // На тач-устройствах наведения нет: играет кадр, дошедший до центра экрана.
-        if (touch.matches && !reduced.matches) void start();
+        // На тач-устройствах наведения нет: играет кадр, дошедший до центра
+        // экрана, — но не раньше первого скролла, см. `whenTouchReady`.
+        if (touch.matches && !reduced.matches) whenTouchReady(() => void start());
       },
       { threshold: touch.matches ? 0.6 : 0.01 },
     );
@@ -106,21 +156,29 @@ export function Frame({ href, title, media, priority, sizes, placeholder, classN
   }, [media, start, stop]);
 
   const duration = media?.duration ?? 0;
-  const tint = media?.tint;
 
-  return (
-    <Link
-      ref={rootRef}
-      href={href}
-      data-frame
-      data-playing={playing || undefined}
-      className={`group relative block overflow-hidden bg-ink-raised ${className ?? ""}`}
-      style={tint ? ({ "--case-tint": tint } as React.CSSProperties) : undefined}
-      onPointerEnter={start}
-      onPointerLeave={stop}
-      onFocus={start}
-      onBlur={stop}
-    >
+  /*
+    Живой проект живёт на чужом домене — его открываем в новой вкладке,
+    чтобы портфолио осталось на месте, пока клиент щупает продукт.
+  */
+  const external = href?.startsWith("http");
+
+  const shell = {
+    ref: (node: HTMLElement | null) => {
+      rootRef.current = node;
+    },
+    "data-frame": true,
+    "data-playing": playing || undefined,
+    className: `glow-frame group relative block overflow-hidden bg-ink-raised ${className ?? ""}`,
+    style: caseVars(tint),
+    onPointerEnter: start,
+    onPointerLeave: stop,
+    onFocus: start,
+    onBlur: stop,
+  };
+
+  const inner = (
+    <>
       <span className="relative block aspect-video">
         {media ? (
           <>
@@ -169,8 +227,8 @@ export function Frame({ href, title, media, priority, sizes, placeholder, classN
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-(--duration-develop) ease-(--ease-reel) group-hover:opacity-100 group-focus-visible:opacity-100"
           style={{
-            boxShadow: "inset 0 -6rem 5rem -5rem var(--case-tint)",
-            borderBottom: "1px solid var(--case-tint)",
+            boxShadow: "inset 0 -6rem 5rem -5rem var(--case-lit)",
+            borderBottom: "1px solid var(--case-lit)",
           }}
         />
       </span>
@@ -181,6 +239,22 @@ export function Frame({ href, title, media, priority, sizes, placeholder, classN
           <span className="slate tabular-nums">{timecode(playing ? elapsed : duration)}</span>
         )}
       </span>
+    </>
+  );
+
+  if (!href) return <div {...shell}>{inner}</div>;
+
+  if (external) {
+    return (
+      <a {...shell} href={href} target="_blank" rel="noreferrer">
+        {inner}
+      </a>
+    );
+  }
+
+  return (
+    <Link {...shell} href={href}>
+      {inner}
     </Link>
   );
 }

@@ -50,10 +50,20 @@ export function ChapterRail({ chapters }: Props) {
             className="pointer-events-auto flex items-center gap-3 transition-colors duration-300"
             aria-current={current ? "true" : undefined}
           >
+            {/*
+              Линейка всегда шириной 8, короткой её делает `scale-x`, а не `w-3`.
+              Анимация ширины здесь стоила бы дорого: шкала стоит в одном флексе
+              с колонкой работ, её собственная ширина считается по самому широкому
+              пункту, и пока линейка ехала с 12px до 32px, шкала «дышала», а вся
+              колонка с блоками ползла вбок долями пикселя за кадр. Замер
+              31.08.2026: шкала 147.25 → 148.84, колонка 261.97 → 264.03.
+              Владелец видел это как тряску блоков вбок. `transform` раскладку
+              не трогает, поэтому двигается только сама линейка.
+            */}
             <span
               aria-hidden
-              className={`h-px transition-all duration-500 ease-(--ease-reel) ${
-                current ? "w-8 bg-bone" : "w-3 bg-rule-strong"
+              className={`h-px w-8 origin-left transition-[transform,background-color] duration-500 ease-(--ease-reel) ${
+                current ? "scale-x-100 bg-bone" : "scale-x-[0.375] bg-rule-strong"
               }`}
             />
             <span

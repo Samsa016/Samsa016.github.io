@@ -23,28 +23,67 @@
   --font-sans: var(--font-golos), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
-  --text-chapter: clamp(2.125rem, 6.2vw, 5.75rem);
+  /*
+    Потолок 6.5rem, а не 7: на 2560 жёлоб доходит до максимума и съедает
+    колонку до 1103 px, а «автоматизация» при кегле 112 занимает 1091 —
+    двенадцать пикселей запаса, и любая подмена шрифта вернула бы перенос.
+    При 104 px слово занимает 1013, запас девяносто пикселей.
+  */
+  --text-chapter: clamp(2.125rem, 6.2vw, 6.5rem);
   --text-chapter--line-height: 0.94;
   --text-chapter--letter-spacing: -0.03em;
 
-  --text-case: clamp(1.5rem, 2.6vw, 2.75rem);
+  /*
+    Заголовок крупного кейса. Отдельная ступень между главой и клиентским
+    кейсом: глава именует год, кейс внутри неё не может звучать так же громко.
+    Потолок в 4rem выбран по сетке — самое широкое название («AutoScraper»,
+    одно слово, переносить нечего) должно укладываться в колонку 6/12 с воздухом.
+  */
+  --text-feature: clamp(1.875rem, 4.4vw, 4.75rem);
+  --text-feature--line-height: 0.98;
+  --text-feature--letter-spacing: -0.025em;
+
+  /*
+    Строка в списке работ. Ступень между кейсом и крупным кейсом: строк 29,
+    они несут страницу, и на кегле кейса список читается как перечисление,
+    а не как афиша.
+  */
+  --text-index: clamp(1.375rem, 3.2vw, 3.5rem);
+  --text-index--line-height: 1.06;
+  --text-index--letter-spacing: -0.022em;
+
+  --text-case: clamp(1.5rem, 2.6vw, 3rem);
   --text-case--line-height: 1.04;
   --text-case--letter-spacing: -0.02em;
 
-  --text-lede: clamp(1.0625rem, 1.4vw, 1.375rem);
+  --text-lede: clamp(1.0625rem, 1.4vw, 1.5rem);
   --text-lede--line-height: 1.55;
 
-  --text-credit: 0.8125rem;
+  --text-credit: clamp(0.8125rem, 0.7vw, 1.0625rem);
   --text-credit--line-height: 1.5;
 
-  --text-slate: 0.6875rem;
+  --text-slate: clamp(0.6875rem, 0.58vw, 0.875rem);
   --text-slate--line-height: 1;
   --text-slate--letter-spacing: 0.24em;
 
+  /*
+    Верхние границы шкалы подняты 31.08.2026 под большие мониторы.
+    На 27 дюймах старые значения ломали страницу: контейнер упирался в 1440 px
+    посреди 2560, по краям оставалась пустота, а титры и подписи держали
+    фиксированные 13 и 11 px рядом с заголовком в 92 — мелкий текст переставал
+    читаться, и пропорция между ним и дисплейным набором становилась дикой.
+    Поэтому фиксированные кегли стали `clamp`, а не константой.
+
+    Ниже 1440 px ничего не изменилось: там работает средний член каждого
+    `clamp`, а не верхняя граница. Ноутбук выглядит ровно как выглядел.
+  */
+
   /* Ритм */
   --spacing-chapter: clamp(6rem, 12vh, 12rem);
-  --spacing-gutter: clamp(1.25rem, 4vw, 4rem);
-  --container-frame: 90rem;
+  --spacing-gutter: clamp(1.25rem, 4vw, 5.5rem);
+  --container-frame: 112rem;
+  /* Радиус ореола под кадром. Крупный и мягкий: это свет, а не обводка. */
+  --glow-soft: 7rem;
 
   /* Движение */
   --ease-reel: cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -58,6 +97,11 @@
       ахроматичным и кадр не выделяется цветом, которого у работы нет.
     */
     --case-tint: var(--color-muted);
+    /*
+      Заглушка светлой формы. Настоящее значение ставится инлайном рядом
+      с `--case-tint` — см. `caseVars()` в components/CaseBlocks.tsx.
+    */
+    --case-lit: var(--color-muted);
   }
 
   html {
@@ -65,12 +109,49 @@
     color-scheme: dark;
   }
 
+  /*
+    Заливка живёт только на `html`. Продублируй её здесь — и она закроет собой
+    слои света и материала: у псевдоэлемента с отрицательным z-index фон
+    собственного родителя оказывается сверху.
+  */
   body {
-    background-color: var(--color-ink);
     color: var(--color-bone);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+
+  /*
+    Свет. Одна заливка на четырнадцать тысяч пикселей прокрутки читается как
+    мёртвая плоскость, поэтому под страницей лежит закреплённый слой с одним
+    источником света сверху-слева и добором снизу-справа — как лампа в зале.
+    Слой не скроллится: страница движется сквозь свет, а не вместе с ним.
+  */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background:
+      radial-gradient(105% 70% at 26% -14%, hsl(204 38% 28% / 0.62), transparent 64%),
+      radial-gradient(70% 55% at 88% 96%, hsl(226 32% 24% / 0.5), transparent 60%);
+  }
+
+  /*
+    Материал. Очень слабая крапчатость снимает пластиковую гладкость заливки:
+    на глаз она не читается как эффект, но фон перестаёт выглядеть как краска
+    из ведра. Держим на пределе различимости — заметное зерно превратило бы
+    сайт в стилизацию под плёнку, а он не про неё.
+  */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.028;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   /*
@@ -113,6 +194,72 @@
     color: var(--color-muted);
   }
 
+  /*
+    Поле работы. Цвет кейса перестал ждать курсора: он лежит под самим блоком
+    очень слабым пятном, поэтому при прокрутке страница медленно меняет оттенок
+    вслед за работами — от ржавчины авторынка к бирюзе векторного поиска.
+    Источник цвета по-прежнему один, `--case-tint`; меняется только то, что он
+    работает всегда, а не на шести кадрах из двадцати семи.
+
+    Пятно живёт фоном самого блока, а не псевдоэлементом: фон рисуется под
+    содержимым по умолчанию, и не нужно ни слоёв, ни z-index поверх текста.
+  */
+  .case-field {
+    background-image: radial-gradient(
+      78% 70% at 28% 46%,
+      color-mix(in oklab, var(--case-tint) 7%, transparent),
+      transparent 76%
+    );
+  }
+
+  /*
+    Свечение работы (31.08.2026). Разбор референсов показал, почему цвет не
+    читался: он лежал подложкой. Подложка на тёмном фоне выглядит грязью,
+    а не цветом. Здесь тот же `--case-tint` работает источником света — ореолом
+    вокруг кадра, как на референсе Gcore: фон остаётся чёрным, светится край.
+
+    `--case-lit` объявляется рядом с `--case-tint` (оба ставит `field()` в
+    CaseBlocks инлайном). Объявить его здесь, в `:root`, нельзя: var() внутри
+    пользовательского свойства резолвится на том элементе, где свойство
+    объявлено, и все работы получили бы светлую форму заглушечного тинта.
+  */
+  .glow-frame {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--case-lit) 26%, transparent),
+      0 0 var(--glow-soft) calc(var(--glow-soft) / -3)
+        color-mix(in oklab, var(--case-lit) 42%, transparent);
+  }
+
+  /*
+    Светлая полоса. Единственное место на сайте, где фон становится светлым:
+    страница ломается пополам, и лента перестаёт быть однородной темнотой —
+    это и была причина «выглядит мертво», а не сама темнота.
+  */
+  .band-light {
+    background-color: var(--color-bone);
+    color: var(--color-ink);
+  }
+  .band-light .slate {
+    color: color-mix(in oklab, var(--color-ink) 55%, var(--color-bone));
+  }
+  .band-light :focus-visible {
+    outline-color: var(--color-ink);
+  }
+
+  /*
+    Дыхание главы. Работы дают локальные пятна цвета, но между ними лента
+    оставалась ровной темнотой — на общем плане пять глав сливались в одну
+    полосу. Слабое осветление к началу главы и уход в базу к концу размечает
+    прокрутку на части, не вводя ни одного нового цвета: это тон, не краска.
+  */
+  .chapter-field {
+    background-image: linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--color-bone) 4%, transparent),
+      transparent 42%
+    );
+  }
+
   /* Ссылка с подчёркиванием, растущим от левого края. */
   .rule-link {
     position: relative;
@@ -142,6 +289,17 @@
   в самих компонентах — здесь снимается только CSS-анимация.
 */
 @media (prefers-reduced-motion: reduce) {
+  /*
+    Блоки, которые проявляются при скролле, обязаны остаться видимыми.
+    motion в этом режиме отрисовывает `initial` и не запускает анимацию —
+    без этого правила страница остаётся пустой: содержимое есть в разметке,
+    но лежит на `opacity: 0`. Инлайновый стиль перебивается только `!important`.
+  */
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
   *,
   *::before,
   *::after {

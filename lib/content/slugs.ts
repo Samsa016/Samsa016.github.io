@@ -31,6 +31,8 @@ export const SLUGS = [
   "client-clinic-rag",
   "client-deals-bot",
   "client-custdev",
+  "client-service-mentor",
+  "client-drop-bot",
 ] as const;
 
 export type Slug = (typeof SLUGS)[number];
