@@ -29,6 +29,7 @@ CLIENTS=$(printf '%s' "$CLIENTS" | tr -d '\r' | tr '\n' '|' | sed -E 's/\|+/|/g;
 if [[ -z "$CLIENTS" ]]; then
   echo "Список заказчиков не найден: нет ни PRIVACY_CLIENTS, ни .privacy-clients." >&2
   echo "Без него проверка неполная, поэтому она не проходит." >&2
+  [[ -n "${GITHUB_ACTIONS:-}" ]] && echo "::error::privacy: PRIVACY_CLIENTS пуст"
   exit 1
 fi
 
@@ -37,7 +38,17 @@ hits=$(grep -rEn "$PATTERN|$CLIENTS" lib/ app/ components/ \
 
 if [[ -n "$hits" ]]; then
   echo "Найдены данные, которых на сайте быть не должно:"
-  echo "$hits"
+  # Логи публичного репозитория читает любой вошедший: в CI печатаем только
+  # файл и строку, а не саму строку с найденным именем.
+  if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+    n=$(printf '%s\n' "$hits" | wc -l)
+    alts=$(printf '%s' "$CLIENTS" | tr '|' '\n' | wc -l)
+    short=$(printf '%s' "$CLIENTS" | tr '|' '\n' | awk '{ print length }' | sort -n | head -1)
+    where=$(printf '%s\n' "$hits" | cut -d: -f1,2 | head -15 | paste -sd ' ' -)
+    echo "::error::privacy: $n совпадений; в списке $alts имён, самое короткое $short симв.; где: $where"
+  else
+    echo "$hits"
+  fi
   exit 1
 fi
 
