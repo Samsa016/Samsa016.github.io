@@ -10,6 +10,9 @@ type Props = {
 /**
  * Липкая шкала глав слева — положение в фильмографии.
  * На узких экранах прячется: там роль ориентира выполняют сами заголовки глав.
+ *
+ * Из потока выведена намеренно: стоя в одном флексе с колонкой работ, она
+ * съедала её ширину слева, и вся страница выглядела прижатой вправо.
  */
 export function ChapterRail({ chapters }: Props) {
   const [active, setActive] = useState<ChapterId>(chapters[0]?.id);
@@ -39,8 +42,19 @@ export function ChapterRail({ chapters }: Props) {
   return (
     <nav
       aria-label="Главы"
-      className="pointer-events-none sticky top-0 hidden h-dvh shrink-0 flex-col justify-center gap-6 pl-gutter lg:flex"
+      /*
+        Шкала стоит в поле слева от контейнера, а не внутри него: внутри она
+        наезжала на названия работ. Поле появляется только на широких экранах,
+        поэтому там же включается и она — ниже ориентиром служат заголовки глав.
+
+        Порог 2048, а не 2000: контейнер шириной 112rem центрируется, слева от
+        него остаётся (100vw − 1792) / 2, и на шкалу в 112 px этого хватает
+        ровно с 2048. На 2000 её левый край уходил за вьюпорт — раньше это
+        давало горизонтальную прокрутку, теперь обрезалось бы `.hero-clip`.
+      */
+      className="pointer-events-none absolute inset-y-0 -left-32 z-20 hidden w-28 min-[2048px]:block"
     >
+      <div className="sticky top-0 flex h-dvh flex-col justify-center gap-6">
       {chapters.map(({ id, copy }) => {
         const current = id === active;
         return (
@@ -76,6 +90,7 @@ export function ChapterRail({ chapters }: Props) {
           </a>
         );
       })}
+      </div>
     </nav>
   );
 }

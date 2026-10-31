@@ -10,13 +10,21 @@
 
 @theme {
   /* Палитра */
-  --color-ink: #0a0c0f;
+  --color-ink: #08090b;
   --color-ink-raised: #12161b;
   --color-ink-sunken: #06080a;
   --color-bone: #e8e4dc;
   --color-muted: #7c8288;
   --color-rule: --alpha(var(--color-bone) / 10%);
   --color-rule-strong: --alpha(var(--color-bone) / 22%);
+
+  /*
+    Свет курсора. Единственный цвет, который сайт добавляет от себя, — и он
+    приглушён почти до серого: у clevante.cz такой же приём даёт «невероятный
+    оттенок», о котором говорил владелец, а насыщенный синий читается шаблоном
+    (`REFERENCES.md`, вторая волна).
+  */
+  --color-beam: #7da3c0;
 
   /* Типографика */
   --font-display: var(--font-unbounded), ui-sans-serif, system-ui, sans-serif;
@@ -127,6 +135,15 @@
     источником света сверху-слева и добором снизу-справа — как лампа в зале.
     Слой не скроллится: страница движется сквозь свет, а не вместе с ним.
   */
+  /*
+    Сетка под страницей. Референс владельца — вогнутая решётка, где линии
+    расходятся к краям кадра, как стены и пол, снятые широким углом. Рисуется
+    параметрически в `public/hero/grid.svg`, поэтому не растягивается растром
+    и одинаково чиста на 1280 и на 2560.
+
+    Держится на пределе различимости: это структура, дающая пространство,
+    а не узор. Заметная сетка спорила бы с текстом и читалась бы как обои.
+  */
   body::before {
     content: "";
     position: fixed;
@@ -134,8 +151,17 @@
     z-index: -2;
     pointer-events: none;
     background:
-      radial-gradient(105% 70% at 26% -14%, hsl(204 38% 28% / 0.62), transparent 64%),
-      radial-gradient(70% 55% at 88% 96%, hsl(226 32% 24% / 0.5), transparent 60%);
+      radial-gradient(120% 78% at 22% -18%, hsl(210 14% 16%), transparent 62%),
+      radial-gradient(80% 60% at 92% 104%, hsl(222 12% 13%), transparent 58%);
+  }
+
+  .page-grid {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background: url("/hero/grid.svg") center / cover no-repeat;
+    opacity: 0.055;
   }
 
   /*
@@ -204,7 +230,13 @@
     Пятно живёт фоном самого блока, а не псевдоэлементом: фон рисуется под
     содержимым по умолчанию, и не нужно ни слоёв, ни z-index поверх текста.
   */
+  /*
+    Поле работы. Свечение тинта заходит под текст, поэтому блок получает
+    собственные поля: без них строки упирались прямо в край подсветки и
+    читались как прижатые к границе.
+  */
   .case-field {
+    padding-inline: clamp(0rem, 2.4vw, 3rem);
     background-image: radial-gradient(
       78% 70% at 28% 46%,
       color-mix(in oklab, var(--case-tint) 7%, transparent),
@@ -260,6 +292,28 @@
     );
   }
 
+  /*
+    Тезис, собирающийся из пикселей (`PixelText`).
+
+    Слово — отдельный блок и не переносится внутри себя: буквы разложены по
+    инлайн-блокам, а между ними строка рвётся где угодно, и «автоматизация»
+    получила бы перенос посреди слова без дефиса. Переносится строка по
+    пробелам между словами — там же, где и обычный текст.
+  */
+  .pixel-word {
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  /*
+    Частица. Инлайн-блок нужен, чтобы к букве применялись `transform` и
+    `filter`; высота строки при этом не меняется — у частицы тот же кегль
+    и тот же интерлиньяж, что у строки вокруг.
+  */
+  .pixel-cell {
+    display: inline-block;
+  }
+
   /* Ссылка с подчёркиванием, растущим от левого края. */
   .rule-link {
     position: relative;
@@ -295,9 +349,11 @@
     без этого правила страница остаётся пустой: содержимое есть в разметке,
     но лежит на `opacity: 0`. Инлайновый стиль перебивается только `!important`.
   */
-  [data-reveal] {
+  [data-reveal],
+  [data-pixel] {
     opacity: 1 !important;
     transform: none !important;
+    filter: none !important;
   }
 
   *,
@@ -307,5 +363,553 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/*
+  ── Кадр героя: серверная, оживающая под курсором ───────────────────────────
+
+  Решение владельца 02.09.2026. Сцена снята полностью выключенной; всё, что
+  светится, добавляется здесь поверх и живёт ровно столько, сколько курсор
+  находится в кадре. Ничего не анимируется само по себе — иначе курсор
+  перестаёт быть единственным источником жизни и приём рассыпается.
+
+  Разметка экранов задана в пикселях исходника (2752×1536), поэтому внутренний
+  слой рисуется в натуральную величину и сжимается одним `scale(var(--k))`.
+*/
+@layer components {
+  /*
+    Кадр героя занимает экран целиком: первый экран — это сцена, а не блок
+    внутри страницы. Пропорция исходника при этом сохраняется, лишнее уходит
+    за края, поэтому на широких мониторах комната не сплющивается.
+  */
+  /*
+    Боковой заезд блоков (`Reveal from="left" | "right"`) уводит их на 72 px
+    за край контейнера. На узких экранах поле контейнера меньше этого сдвига,
+    и без обрезки страница получала горизонтальную прокрутку. `clip`, а не
+    `hidden`: `hidden` создал бы для главы новый скроллпорт, и липкая шкала
+    глав внутри перестала бы липнуть.
+  */
+  .hero-clip {
+    overflow-x: clip;
+  }
+
+  /*
+    Затемнение по краям кадра героя. Титры лежат прямо на снятой комнате,
+    и без него контраст держится только там, где кадр случайно тёмный:
+    сверху за заголовком идут светильники, снизу — стол под лампой.
+    Середина не трогается — там работает фонарик под курсором.
+  */
+  .hero-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      --alpha(var(--color-ink) / 78%) 0%,
+      transparent 34%,
+      transparent 56%,
+      --alpha(var(--color-ink) / 88%) 100%
+    );
+  }
+
+  /*
+    Первый экран. Держит ровно высоту окна: сцена и есть страница, пока по ней
+    не начали листать. `svh`, а не `vh`, — иначе на телефоне адресная строка
+    отъедает низ кадра и подпись под лидом уезжает под обрез.
+  */
+  .hero-stage {
+    position: relative;
+    height: 100svh;
+    /*
+      Заливка под сценой. В покое её не видно вовсе — кадр закрывает экран
+      целиком, — но на откате сцена отходит вглубь, и по краям открывалась бы
+      полоса общего фона со светом от лампы. Полоса читалась как шов, а не как
+      глубина. Общий запрет на заливку вне `html` этим не нарушен: слои света
+      и крапчатости здесь и так перекрыты кадром.
+    */
+    background-color: var(--color-ink);
+  }
+
+  /*
+    Слой, который откатывается. Отдельный от `.hero-stage` нужен, чтобы
+    `transform` не менял высоту, которую занимает секция: сцена уходит вглубь,
+    а место под ней остаётся тем же экраном, и страница не дёргается.
+  */
+  .hero-stage-inner {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 34%;
+  }
+
+  /* Откатившаяся сцена не участвует в проверке попадания — см. `HeroStage`. */
+  .hero-stage-inner[data-gone] {
+    pointer-events: none;
+  }
+
+  .room-stage {
+    position: relative;
+    width: 100%;
+    height: 100svh;
+    overflow: hidden;
+    isolation: isolate;
+    /*
+      Пока курсора не было, луч стоит за кадром и ничего не проявляет.
+      Координаты — в пикселях исходника: маски лежат внутри слоя, сжатого
+      `scale(var(--k))`, и в единицах вьюпорта промахнулись бы мимо курсора.
+    */
+    --mx: -9999px;
+    --my: -9999px;
+    --k: 1;
+    --beam: clamp(11rem, 19vw, 26rem);
+  }
+
+  .room-inner {
+    position: absolute;
+    inset: 0;
+    width: 2752px;
+    height: 1536px;
+    transform-origin: 0 0;
+    transform: translate(var(--ox, 0px), var(--oy, 0px)) scale(var(--k));
+  }
+
+  .room-plate,
+  .room-lit {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /*
+    Фонарик. Та же картинка, поднятая по яркости и слегка уведённая в холод,
+    показывается только сквозь мягкий круг под курсором. Маска и есть весь
+    эффект: никакого дополнительного слоя света рисовать не нужно.
+  */
+  .room-lit {
+    filter: brightness(3.6) contrast(1.22) saturate(0.5);
+    opacity: 0;
+    transition: opacity 420ms var(--ease-reel);
+    /*
+      Ядро луча держим сплошным до половины радиуса: мягкий градиент от самого
+      центра размазывал свет, и под курсором «ничего не происходило».
+    */
+    mask-image: radial-gradient(
+      circle var(--beam) at var(--mx) var(--my),
+      #000 0%,
+      #000 34%,
+      rgb(0 0 0 / 0.72) 58%,
+      transparent 82%
+    );
+    mask-repeat: no-repeat;
+  }
+
+  .room-stage[data-lit] .room-lit {
+    opacity: 1;
+  }
+
+  /*
+    Собственные индикаторы. Ролик даёт объёмный свет и пыль, но его вспышки
+    редкие; эти точки отвечают за частое мерцание. Каждая идёт в своём ритме —
+    длительность и сдвиг фазы приходят инлайном из позиции лампы, поэтому
+    стойка живёт, а не мигает как гирлянда в такт.
+  */
+  .room-lights {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 380ms var(--ease-reel);
+    mask-image: radial-gradient(
+      circle var(--beam) at var(--mx) var(--my),
+      #000 0%,
+      #000 40%,
+      rgb(0 0 0 / 0.8) 64%,
+      transparent 86%
+    );
+    mask-repeat: no-repeat;
+  }
+
+  .room-stage[data-lit] .room-lights {
+    opacity: 1;
+  }
+
+  .room-lights i {
+    position: absolute;
+    margin: -50% 0 0 -50%;
+    border-radius: 999px;
+    background: var(--color-beam);
+    box-shadow:
+      0 0 10px 2px --alpha(var(--color-beam) / 75%),
+      0 0 26px 8px --alpha(var(--color-beam) / 30%);
+    animation: room-blink var(--blink-dur, 1.2s) steps(1, end) var(--blink-delay, 0s) infinite;
+  }
+
+  /*
+    Клавиши и мышь горят ровно: подсветка стола не мигает, она включена.
+    Ядро делаем светлее самого луча — на осветлённом фоне точка в цвете луча
+    сливалась с ним и подсветки не было видно вовсе.
+  */
+  .room-lights i.desk {
+    animation-name: room-breathe;
+    animation-timing-function: ease-in-out;
+    animation-duration: 2.6s;
+    background: color-mix(in srgb, var(--color-beam) 55%, #fff);
+    box-shadow:
+      0 0 9px 2px --alpha(var(--color-beam) / 85%),
+      0 0 22px 7px --alpha(var(--color-beam) / 40%);
+  }
+
+  /* Зарево под устройствами: свет, который они отбрасывают на стол. */
+  .desk-glow {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 999px;
+    mix-blend-mode: screen;
+    animation: room-breathe 3.4s ease-in-out infinite;
+  }
+
+  .desk-glow.keys {
+    left: 1090px;
+    top: 1352px;
+    width: 570px;
+    height: 130px;
+    background: radial-gradient(
+      ellipse at center,
+      --alpha(var(--color-beam) / 42%),
+      --alpha(var(--color-beam) / 14%) 52%,
+      transparent 78%
+    );
+  }
+
+  .desk-glow.mouse {
+    left: 1768px;
+    top: 1392px;
+    width: 150px;
+    height: 96px;
+    background: radial-gradient(
+      ellipse at center,
+      --alpha(var(--color-beam) / 38%),
+      transparent 74%
+    );
+  }
+
+  @keyframes room-blink {
+    0%, 44%  { opacity: 1; }
+    46%, 58% { opacity: 0.18; }
+    60%, 82% { opacity: 1; }
+    84%, 92% { opacity: 0.42; }
+    94%      { opacity: 1; }
+  }
+
+  @keyframes room-breathe {
+    0%, 100% { opacity: 0.72; }
+    50%      { opacity: 1; }
+  }
+
+  /*
+    Живая комната. Тот же кадр, где мерцают стойки и горит подсветка стола,
+    проявляется через ту же маску, что и свет. Лежит выше осветлённой копии,
+    поэтому подменяет её собой, как только ролик готов.
+  */
+  .room-alive {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 480ms var(--ease-reel);
+    /* Мерцание — главный носитель эффекта, поэтому лампочки поднимаем по
+       контрасту: в исходном ролике они тонут в общей темноте кадра. */
+    filter: brightness(1.85) contrast(1.5) saturate(0.9);
+    mix-blend-mode: screen;
+    mask-image: radial-gradient(
+      circle var(--beam) at var(--mx) var(--my),
+      #000 0%,
+      #000 38%,
+      rgb(0 0 0 / 0.78) 62%,
+      transparent 84%
+    );
+    mask-repeat: no-repeat;
+  }
+
+  .room-stage[data-lit] .room-alive {
+    opacity: 1;
+  }
+
+  /*
+    Свой курсор. Системная стрелка на тёмной сцене выдаёт, что перед тобой
+    обычная страница, а точка в цвете луча читается как сам источник света.
+    Идёт без задержки, в отличие от луча: указатель обязан быть под рукой.
+  */
+  /*
+    Системную стрелку прячем только когда сцена зажжена. Безусловное
+    `cursor: none` оставляло первый экран вообще без курсора, если мышь на
+    момент загрузки уже стояла внутри кадра: `pointerenter` для неё не
+    приходит, точка-замена без `[data-lit]` прозрачна, и указателя нет нигде.
+  */
+  .room-stage[data-lit] {
+    cursor: none;
+  }
+
+  .room-cursor {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    border-radius: 999px;
+    background: var(--color-beam);
+    box-shadow: 0 0 16px 4px --alpha(var(--color-beam) / 45%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 240ms var(--ease-reel);
+    transform: translate(var(--cx, -100px), var(--cy, -100px));
+  }
+
+  .room-stage[data-lit] .room-cursor {
+    opacity: 1;
+  }
+
+  .room-screen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  /*
+    Видео вписано в нарисованное стекло проективной матрицей. Пока экран не
+    активен, оно не показывается и не грузится: `preload="none"` на теге плюс
+    нулевая непрозрачность здесь.
+  */
+  .room-video {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 300ms var(--ease-reel),
+      transform 520ms var(--ease-reel);
+  }
+
+  /*
+    Под курсором экран подаётся вперёд: `--lift` — тот же четырёхугольник,
+    раздвинутый от центра на четыре процента. Демка читается крупнее, а соседние
+    стёкла остаются на месте и уходят в тень.
+  */
+  .room-screen[data-on] .room-video {
+    opacity: 1;
+    transform: var(--lift);
+  }
+
+  /*
+    Момент включения. Монитор не «проявляется» — он загорается: короткая
+    вспышка и разворачивающаяся сверху вниз полоса, как у старой развёртки.
+    Играет один раз, поэтому лежит на псевдоэлементе кадра.
+  */
+  .room-screen[data-on] .room-video::after {
+    content: "";
+  }
+
+  .room-flash {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      --alpha(var(--color-beam) / 55%) 46%,
+      #fff 50%,
+      --alpha(var(--color-beam) / 55%) 54%,
+      transparent 100%
+    );
+    mix-blend-mode: screen;
+  }
+
+  .room-screen[data-on] .room-flash {
+    animation: room-scan 620ms var(--ease-reel) 1;
+  }
+
+  @keyframes room-scan {
+    0%   { opacity: 0; }
+    12%  { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  /* Ореол — свет из-под включённого стекла, а не обводка вокруг него. */
+  .room-halo {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 420ms var(--ease-reel);
+    box-shadow:
+      0 0 90px 18px --alpha(var(--color-beam) / 24%),
+      0 0 220px 60px --alpha(var(--color-beam) / 12%);
+  }
+
+  .room-screen[data-on] .room-halo {
+    opacity: 1;
+  }
+
+  .room-hit {
+    position: absolute;
+    /* Наследование пишем явно: сцена прячет курсор, зона обязана делать то же. */
+    cursor: inherit;
+    left: 0;
+    top: 0;
+    width: 100px;
+    height: 100px;
+    transform-origin: 0 0;
+    pointer-events: auto;
+  }
+
+  /* Сенсорный ввод: наводить нечем, поэтому показываем всё сразу и без луча. */
+  @media (hover: none) {
+    .room-lit,
+    .room-alive {
+      opacity: 0.55;
+      mask-image: none;
+    }
+
+    .room-video {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .room-lit,
+    .room-alive,
+    .room-video,
+    .room-halo {
+      transition-duration: 1ms;
+    }
+  }
+}
+
+/*
+  Подвал: бегущая строка с названиями работ и имя во всю ширину.
+  Референс — redis.agency (`REFERENCES.md`): «названия, перематывающиеся вбок,
+  в footer», и гигантское имя, уходящее за обрез экрана.
+*/
+@layer components {
+  .site-footer {
+    position: relative;
+    /* Имя шире экрана специально: лишнее должно уходить за обрез, а не
+       вытаскивать за собой горизонтальную прокрутку всей страницы. */
+    overflow: hidden;
+    border-top: 1px solid var(--color-rule);
+    /* Отступ сверху — воздух после секции «Связаться», не более того. Когда по
+       ленте бежали те же контакты, он был вдвое больше и пытался развести два
+       одинаковых списка по разным экранам; на 1440×900 это всё равно не
+       работало, и лечить надо было содержимое, а не расстояние. */
+    padding-block: clamp(3rem, 8vh, 6rem) clamp(1.5rem, 3vh, 3rem);
+  }
+
+  /*
+    Лента. Ширина дорожки — два одинаковых прогона, поэтому сдвиг ровно на
+    половину возвращает её в исходное положение и шов не читается.
+  */
+  .ticker {
+    overflow: hidden;
+    /* Края растворяются: лента, обрезанная по границе экрана, читается как
+       ошибка вёрстки, а не как движение. */
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    /*
+      Длительность подобрана под длину прогона, а не взята круглым числом:
+      скорость ленты — это ширина одного прогона, делённая на время. С тремя
+      контактами прогон был ~1500 px и 26 s давали спокойные ~58 px/s; на 21
+      названии прогон вырос до ~10 400 px, и те же 26 s разогнали бы ленту до
+      400 px/s — названия не прочитать. 180 s возвращают исходные ~58 px/s.
+      Меняешь состав ленты — пересчитай и это число.
+    */
+    animation: ticker-run 180s linear infinite;
+  }
+
+  /* Под курсором лента встаёт: по ней кликают, а не только смотрят. */
+  .ticker:hover .ticker-track,
+  .ticker:focus-within .ticker-track {
+    animation-play-state: paused;
+  }
+
+  .ticker-run {
+    display: flex;
+    align-items: baseline;
+  }
+
+  .ticker-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.85rem;
+    padding-inline: clamp(1.25rem, 3vw, 3.5rem);
+    white-space: nowrap;
+    transition: color var(--duration-develop) var(--ease-reel);
+  }
+
+  /* Разделитель — квадратная точка, тот же пиксель, из которого собираются
+     тезисы глав. Круглая точка здесь читалась бы как маркер списка. */
+  .ticker-item::before {
+    content: "";
+    align-self: center;
+    width: 5px;
+    height: 5px;
+    margin-inline-end: clamp(1.25rem, 3vw, 3.5rem);
+    background-color: var(--color-rule-strong);
+  }
+
+  .ticker-value {
+    font-family: var(--font-display);
+    font-size: var(--text-case);
+    line-height: var(--text-case--line-height);
+    letter-spacing: var(--text-case--letter-spacing);
+    color: color-mix(in oklab, var(--color-bone) 55%, transparent);
+    transition: color var(--duration-develop) var(--ease-reel);
+  }
+
+  .ticker-item:hover .ticker-value,
+  .ticker-item:focus-visible .ticker-value {
+    color: var(--color-bone);
+  }
+
+  @keyframes ticker-run {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .footer-name {
+    margin-block: clamp(2rem, 6vh, 5rem) clamp(1.5rem, 4vh, 3.5rem);
+    font-family: var(--font-display);
+    /* 21.5vw — имя доходит до самых краёв экрана и чуть заходит за них.
+       На 24vw за обрез уходила целая буква, и подпись читалась не как приём,
+       а как обрезанная по ошибке. */
+    font-size: clamp(3rem, 21.5vw, 23rem);
+    line-height: 0.8;
+    letter-spacing: -0.045em;
+    text-align: center;
+    white-space: nowrap;
+    /* Тон, а не текст: имя держит низ страницы объёмом, но не спорит
+       по громкости ни с одной работой над ним. */
+    color: color-mix(in oklab, var(--color-bone) 11%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ticker-track {
+      animation: none;
+    }
   }
 }

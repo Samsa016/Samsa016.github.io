@@ -31,7 +31,6 @@ export const en: SiteCopy = {
     openCase: "Read the breakdown",
     live: "See it live",
     repo: "Source",
-    archive: "Also in this chapter",
     allWork: "All work",
     year: "Year",
     noFootage: "No footage yet",
@@ -49,7 +48,7 @@ export const en: SiteCopy = {
     y4: {
       index: "Year 4",
       title: "Agents and automation",
-      lede: "Systems that run with nobody at the controls: they look at the screen, decide, and finish the job. Half the year went to paid work — it sits below, with client names and data left out.",
+      lede: "Systems that run with nobody at the controls: they look at the screen, decide, and finish the job. Half the year went to paid work, shown here without client names or client data.",
     },
     y3: {
       index: "Year 3",
@@ -125,15 +124,15 @@ export const en: SiteCopy = {
     midnight: {
       title: "MIDNIGHT",
       oneLiner:
-        "A pipeline that watches the inbound job feed on its own, scores every item and drafts the reply.",
-      task: "Hunting for work is not work — it is background noise that eats the day: check the sources, read, discard, answer first. The point was to hand off the scout and the account manager, and keep the building and the judgement calls.",
+        "A pipeline that watches job boards around the clock and drops every new posting into a messenger.",
+      task: "Hunting for work is not work — it is background noise that eats the day: check the sources, read, discard, answer first. The point was to hand off the scouting and keep the building and the judgement. The hard part was not reading feeds: the board cannot be queried from outside at all — the signature on its request lives inside the site's own script and reproduces nowhere else.",
       solution:
-        "Once a minute the pipeline pulls new items, normalises them into one shape and runs four scoring stages: legality, fit, difficulty, verdict. Only a positive verdict spends tokens on a draft. Sending goes through a queue with retries and delivery windows. Anything borderline stays with the human.",
+        "Two sources with nothing in common feed one stream. Telegram is read directly; the board is read out of a live logged-in tab. A background tab goes quiet — the browser throttles its timers within minutes, while the board's token lasts about eleven. So the pipeline wakes it from the outside: it attaches to the browser over the debugging protocol, pings the bridge every 30 seconds and reloads the board itself once it falls silent for two and a half minutes or the token grows old. From there postings are normalised into one shape, the ones already seen are dropped, and a new one arrives as a card in Telegram. Scoring and the draft reply are the next stage; for now the call stays with the human.",
       proof: [
-        "Sources polled every minute; only unseen items enter the pipeline",
-        "Four scoring stages before a single token is spent on writing",
-        "Queue with retries, bounded concurrency and delivery windows",
-        "Borderline calls stay with the human",
+        "Sources polled every minute; only unseen postings enter the pipeline",
+        "A bridge to a board that cannot be polled from outside: a ping every 30 seconds, reloads on silence and on token age",
+        "125 tests over normalisation, de-duplication and the bridge reload rules",
+        "Runs around the clock as a systemd unit",
       ],
     },
     sixmo: {
@@ -452,5 +451,10 @@ export const en: SiteCopy = {
       { label: "Email", value: OWNER.email.address, href: OWNER.email.href },
       { label: "GitHub", value: OWNER.github.handle, href: OWNER.github.href },
     ],
+  },
+
+  footer: {
+    note: "Hand-built: Next.js, my own components, not a single template or page builder.",
+    top: "Back to top",
   },
 };

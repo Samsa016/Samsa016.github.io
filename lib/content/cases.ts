@@ -44,7 +44,7 @@ export const CASES: readonly CaseMeta[] = [
     weight: "medium",
     // ночная смена, когда очередь разбирает задачи без людей
     tint: "hsl(230 40% 58%)",
-    stack: ["Python", "LLM-скоринг", "очередь с ретраями", "Telegram"],
+    stack: ["Python", "asyncio", "Telethon", "Playwright CDP", "SQLite"],
     links: {},
   },
   {

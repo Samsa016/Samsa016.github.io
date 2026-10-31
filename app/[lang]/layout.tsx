@@ -5,6 +5,8 @@ import { LANGS, getCopy, type Lang } from "@/lib/content";
 import { DEFAULT_LANG, isLang } from "@/lib/lang";
 import { SITE_URL } from "@/lib/site";
 import "../globals.css";
+import { CursorBeam } from "@/components/CursorBeam";
+import { SiteFooter } from "@/components/SiteFooter";
 
 /*
   Шрифты берутся через next/font: файлы скачиваются на сборке и раздаются
@@ -79,7 +81,16 @@ export default async function LangLayout({
       lang={lang as Lang}
       className={`${unbounded.variable} ${golos.variable} ${jetbrains.variable}`}
     >
-      <body className="min-h-dvh">{children}</body>
+      <body className="relative min-h-dvh">
+        {/* Сетка под страницей и луч, который её проявляет. */}
+        <CursorBeam />
+        {children}
+        {/*
+          Подвал общий для всех страниц: с разбора работы и со страницы «как я
+          работаю» контакты должны быть достижимы так же, как с главной.
+        */}
+        <SiteFooter lang={lang} copy={getCopy(lang)} />
+      </body>
     </html>
   );
 }

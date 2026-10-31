@@ -119,7 +119,6 @@ export type SiteCopy = {
     openCase: string;
     live: string;
     repo: string;
-    archive: string;
     /** Заголовок сквозного списка работ. */
     allWork: string;
     year: string;
@@ -144,5 +143,14 @@ export type SiteCopy = {
     title: string;
     lede: string;
     channels: readonly { label: string; value: string; href: string }[];
+  };
+  /**
+   * Подвал. Бегущая строка с контактами и имя во всю ширину — приём из
+   * `REFERENCES.md`, redis.agency: «названия, перематывающиеся вбок, в footer».
+   */
+  footer: {
+    /** Одна строка о том, чем сделан сайт. Без обещаний и без метрик. */
+    note: string;
+    top: string;
   };
 };

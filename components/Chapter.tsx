@@ -1,5 +1,5 @@
-import type { ChapterCopy, ChapterId } from "@/lib/content";
-import { Reveal } from "./Reveal";
+import { CHAPTER_YEAR, type ChapterCopy, type ChapterId } from "@/lib/content";
+import { PixelText } from "./PixelText";
 
 type Props = {
   id: ChapterId;
@@ -7,31 +7,48 @@ type Props = {
   children: React.ReactNode;
 };
 
+/**
+ * Шапка главы — тезис года.
+ *
+ * Общего `Reveal` здесь нет намеренно: заголовок и абзац под ним собираются
+ * из пикселей (`PixelText`), и подъём блока целиком спорил бы с этой сборкой —
+ * читалось бы как два движения подряд вместо одного.
+ *
+ * Абзац кончается заметно раньше правого края колонки: строки, дотянутые до
+ * границы контейнера, читаются как текст, упёршийся в стену. Отсюда шесть
+ * колонок под лид при девяти под заголовок, а не восемь.
+ */
 export function Chapter({ id, copy, children }: Props) {
   return (
     <section id={`chapter-${id}`} className="chapter-field scroll-mt-24 py-chapter">
-      <Reveal className="mb-16 md:mb-24">
-        <div className="grid gap-x-gutter gap-y-6 md:grid-cols-12">
-          <p className="slate md:col-span-2 md:pt-4">{copy.index}</p>
-          {/*
-            Десять колонок, а не семь. «Автоматизация» дисплейным кеглем —
-            769px при кегле 79px, и в семи колонках (597px) слово не помещалось:
-            заголовок уезжал в три строки с переносом «автома-тизация».
-            Замерено на 768/1024/1280/1440/1920 — на всех ширинах слово теперь
-            влезает в строку, и перенос в заголовке главы не срабатывает.
-          */}
-          <h2 className="min-w-0 font-display text-chapter text-balance md:col-span-10">
-            {copy.title}
-          </h2>
-          {/*
-            Лид намеренно уезжает в правую колонку под заголовок, а не центрируется
-            под ним: асимметрия ломает ритм «заголовок — абзац — заголовок».
-          */}
-          <p className="min-w-0 max-w-[52ch] text-lede text-bone/70 md:col-span-8 md:col-start-3">
-            {copy.lede}
-          </p>
+      <header className="mb-16 grid gap-x-gutter gap-y-8 md:mb-24 md:grid-cols-12">
+        <div className="flex items-baseline gap-4 md:col-span-2 md:flex-col md:gap-2 md:pt-4">
+          <p className="slate">{copy.index}</p>
+          <p className="slate tabular-nums">{CHAPTER_YEAR[id]}</p>
         </div>
-      </Reveal>
+
+        {/*
+          Девять колонок, а не десять: заголовок больше не дотягивается до
+          правого края контейнера, где рядом идёт вертикаль фоновой сетки.
+          «Автоматизация» на верхней ступени кегля занимает 1013 px, девять
+          колонок дают 1306 — запас есть на всех замеренных ширинах
+          (768 / 1024 / 1280 / 1440 / 1920), перенос в заголовке не срабатывает.
+        */}
+        <h2 className="min-w-0 font-display text-chapter md:col-span-9">
+          <PixelText>{copy.title}</PixelText>
+        </h2>
+
+        <p className="min-w-0 max-w-[46ch] text-lede text-bone/70 md:col-span-6 md:col-start-3">
+          {/*
+            Абзац собирается по словам, а не по буквам: на трёх строках
+            побуквенная сборка тянулась бы дольше, чем читается сам текст.
+            Стартует после заголовка — сначала имя года, потом пояснение.
+          */}
+          <PixelText unit="word" step={0.03} delay={0.28}>
+            {copy.lede}
+          </PixelText>
+        </p>
+      </header>
 
       {children}
     </section>

@@ -41,10 +41,18 @@ export function Contents({ chapters, copy }: Props) {
               </span>
             </p>
           </div>
+        </Reveal>
 
-          <ul className="mt-10 flex flex-col gap-2 md:mt-16">
-            {chapters.map(({ id, copy: chapter }) => (
-              <li key={id}>
+        <ul className="mt-10 flex flex-col gap-2 md:mt-16">
+          {chapters.map(({ id, copy: chapter }, i) => (
+            <li key={id}>
+              {/*
+                Названия глав выезжают слева по очереди (решение владельца
+                02.09.2026): оглавление — это четыре строки подряд, и общий
+                подъём читался как одно движение блока, а не как список,
+                который набирается строка за строкой.
+              */}
+              <Reveal from="left" delay={i * 0.09}>
                 <Link
                   href={`#chapter-${id}`}
                   className="group grid grid-cols-[3rem_1fr] items-baseline gap-x-4 py-2 md:grid-cols-[7rem_1fr]"
@@ -59,10 +67,10 @@ export function Contents({ chapters, copy }: Props) {
                     {chapter.title}
                   </span>
                 </Link>
-              </li>
-            ))}
-          </ul>
-        </Reveal>
+              </Reveal>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

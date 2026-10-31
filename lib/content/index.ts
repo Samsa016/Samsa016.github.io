@@ -30,18 +30,6 @@ export const chaptersWithCases = () =>
     (chapter) => chapter.cases.length > 0,
   );
 
-/**
- * Работа для кадра героя (`DESIGN.md` §3).
- *
- * Выбирается из данных, а не прописывается вручную: все демки сейчас
- * переснимаются, и захардкоженный слаг сломался бы на первой же выкладке.
- * Порядок предпочтения — крупная работа со съёмкой, затем любая со съёмкой.
- * Съёмок нет вовсе — героя с кадром не будет, страница падает на текстовую
- * подачу (правило `Frame` из TZ §5: пустой бокс 16:9 хуже отсутствия кадра).
- */
-export const heroCase = () =>
-  CASES.find((c) => c.media && c.weight === "feature") ?? CASES.find((c) => c.media);
-
 /** Номер кейса в общем списке — для подписи «Работа N из M». */
 export const caseIndex = (slug: string) => CASES.findIndex((c) => c.slug === slug) + 1;
 export const caseTotal = CASES.length;

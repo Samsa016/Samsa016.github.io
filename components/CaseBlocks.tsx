@@ -23,7 +23,8 @@ export function FeatureCase({
   lang,
   copy,
   priority,
-}: Common & { meta: CaseMeta; priority?: boolean }) {
+  from,
+}: Common & { meta: CaseMeta; priority?: boolean; from?: "up" | "left" | "right" }) {
   const href = caseHref(lang, meta.slug);
   const caseCopy = copy.cases[meta.slug];
 
@@ -36,6 +37,7 @@ export function FeatureCase({
       <Reveal
         className="case-field mb-24 border-t border-rule pt-10 md:mb-40 md:pt-14"
         style={field(meta.tint)}
+        from={from}
       >
         <div className="grid gap-x-gutter gap-y-8 md:grid-cols-12">
           <div className="md:col-span-6">
@@ -76,7 +78,7 @@ export function FeatureCase({
   }
 
   return (
-    <Reveal className="case-field mb-24 md:mb-40" style={field(meta.tint)}>
+    <Reveal className="case-field mb-24 md:mb-40" style={field(meta.tint)} from={from}>
       <Frame
         href={href}
         title={caseCopy.title}
@@ -111,7 +113,8 @@ export function ClientCase({
   meta,
   lang,
   copy,
-}: Common & { meta: CaseMeta }) {
+  from,
+}: Common & { meta: CaseMeta; from?: "up" | "left" | "right" }) {
   const caseCopy = copy.cases[meta.slug];
   const href = caseHref(lang, meta.slug);
 
@@ -119,6 +122,7 @@ export function ClientCase({
     <Reveal
       className="case-field border-t border-rule py-12 first:border-t-0 md:py-16"
       style={field(meta.tint)}
+      from={from}
     >
       <div className="grid gap-x-gutter gap-y-8 md:grid-cols-12">
         <div className="md:col-span-5">
